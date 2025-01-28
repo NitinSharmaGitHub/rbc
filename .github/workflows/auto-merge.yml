@@ -24,7 +24,7 @@ jobs:
       - name: Merge releases into developer
         run: |
           git checkout developer
-          git merge releases --no-edit
+          git merge releases --allow-unrelated-histories --no-edit
           git push origin developer
 
       - name: Handle Merge Conflicts
