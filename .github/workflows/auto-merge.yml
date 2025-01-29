@@ -25,7 +25,7 @@ jobs:
         run: |
           git checkout developer
           git merge releases --allow-unrelated-histories --no-edit
-          git push developer
+          git push
 
       - name: Handle Merge Conflicts
         if: failure() && github.ref == 'refs/heads/releases'
