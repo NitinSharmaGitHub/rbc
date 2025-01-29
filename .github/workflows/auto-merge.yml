@@ -6,29 +6,21 @@ on:
       - releases
 
 jobs:
-  auto-merge:
+  nightly-merge:
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Full clone necessary for proper merge
 
-      - name: Set Up Git
-        run: |
-          git config --global user.name "GitHub Actions Bot"
-          git config --global user.email "actions@github.com"
-
-      - name: Fetch All Branches
-        run: git fetch --all
-
-      - name: Merge releases into developer
-        run: |
-          git checkout developer
-          git merge releases --allow-unrelated-histories --no-edit
-          git push
-
-      - name: Handle Merge Conflicts
-        if: failure() && github.ref == 'refs/heads/releases'
-        run: |
-          echo "::error::Merge conflict occurred. Please resolve manually."
-          exit 1
+    - name: Nightly Merge
+      uses: robotology/gh-action-nightly-merge@v1.5.2
+      with:
+        stable_branch: 'releases'
+        development_branch: 'developer'
+        allow_ff: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
