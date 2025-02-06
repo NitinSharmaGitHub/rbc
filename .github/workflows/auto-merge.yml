@@ -25,7 +25,7 @@ jobs:
         run: |
           git checkout developer
           git pull origin developer
-          git merge origin/master || echo "Merge conflict detected" > conflict.txt
+          git merge origin/releases || echo "Merge conflict detected" > conflict.txt
 
       - name: Push changes if merge is successful
         if: success()
