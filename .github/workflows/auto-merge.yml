@@ -1,34 +1,46 @@
-name: Auto Merge Releases to Developer
+name: Sync Developer with Master
 
 on:
   push:
     branches:
-      - releases
+      - releases  # Trigger when code is pushed to master
+  workflow_dispatch:  # Allows manual triggering if needed
 
 jobs:
-  auto-merge:
+  sync-branches:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Set Up Git
+      - name: Setup Git
         run: |
-          git config --global user.name "GitHub Actions Bot"
+          git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
 
-      - name: Fetch All Branches
-        run: git fetch --all
-
-      - name: Merge releases into developer
+      - name: Merge master into developer
         run: |
           git checkout developer
-          git merge releases --allow-unrelated-histories --no-edit
+          git pull origin developer
+          git merge origin/master || echo "Merge conflict detected" > conflict.txt
+
+      - name: Push changes if merge is successful
+        if: success()
+        run: |
           git push origin developer
 
-      - name: Handle Merge Conflicts
-        if: failure() && github.ref == 'refs/heads/releases'
-        run: |
-          echo "::error::Merge conflict occurred. Please resolve manually."
-          exit 1
+      - name: Send email notification on conflict
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "Merge Conflict Alert in Developer Branch"
+          body: "Merge conflict detected while merging master into developer. Please resolve it manually."
+          to: "dev-team@example.com"
+          from: "CI Bot <ci@example.com>"
